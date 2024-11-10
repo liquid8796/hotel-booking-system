@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: hotel_booking_system
+      MYSQL_USER: user
+      MYSQL_PASSWORD: dummypassword
+      MYSQL_ROOT_PASSWORD: dummypassword
+    volumes:
+      - ./db-init/mysql/schema.sql:/docker-entrypoint-initdb.d/1.sql
+      - ./db-init/mysql/data.sql:/docker-entrypoint-initdb.d/2.sql
+    networks:
+      - app-network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "--silent" ]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+
+  reservations:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: production
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/hotel_booking_system
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: dummypassword
+    ports:
+      - '8080:8080'
+    volumes:
+      - ../:/usr/src/app
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
