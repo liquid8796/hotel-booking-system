@@ -8,7 +8,7 @@ This project is a **Hotel Booking System** built with Spring Boot and MySQL. The
 ```
 project-root/
 ├── deployment/
-│	└── db-init
+│   └── db-init/
 │   └── docker-compose.yml
 ├── Dockerfile
 ├── src/
