@@ -17,5 +17,5 @@ public interface ReservationService {
 
     ReservationDTO updateReservation(UpdateReservationDTO dto);
 
-    ReservationDTO deleteReservationById(Integer id);
+    String cancelReservationById(Integer id);
 }

@@ -117,9 +117,8 @@ public class ReservationController {
     @PatchMapping(value = "/reservation/{id}/cancel", produces = "application/json")
     public Response<ReservationDTO> cancelReservation(@PathVariable Integer id){
         log.info("Cancel a reservation...");
-        ReservationDTO reservation = reservationService.deleteReservationById(id);
-        String message = !Objects.isNull(reservation) ? "success" : "fail";
+        String message = reservationService.cancelReservationById(id);
 
-        return new Response<>(HttpStatus.OK.value(), message, reservation);
+        return new Response<>(HttpStatus.OK.value(), message, null);
     }
 }

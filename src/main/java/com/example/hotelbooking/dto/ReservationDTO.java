@@ -6,12 +6,13 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Schema(
     name = "Reservation",
     description = "Schema to hold Reservation information"
 )
-@Getter @Setter
+@Getter @Setter @ToString
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
 public class ReservationDTO {
     private Integer reservationId;

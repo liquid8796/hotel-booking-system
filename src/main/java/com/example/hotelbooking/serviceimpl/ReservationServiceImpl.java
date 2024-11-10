@@ -242,14 +242,12 @@ public class ReservationServiceImpl implements ReservationService {
      */
     @Override
     @Transactional
-    public ReservationDTO deleteReservationById(Integer id) {
+    public String cancelReservationById(Integer id) {
         Reservation reservation = reservationRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Reservation not found."));
 
         LocalDateTime currentTime = LocalDateTime.now();
         int rowUpdated = reservationRepository.cancelReservationById(id, currentTime);
 
-        ReservationDTO dto = objectMapper.convertValue(reservation, ReservationDTO.class);
-
-        return rowUpdated > 0 ? dto : null;
+        return rowUpdated > 0 ? "success" : "fail";
     }
 }
