@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -102,10 +104,19 @@ public class HotelServiceImpl implements HotelService {
     public HotelDTO updateHotel(UpdateHotelDTO dto) {
         validateDates(dto.getAvailableFrom(), dto.getAvailableTo());
 
-        hotelRepository.findById(dto.getHotelId()).orElseThrow(() -> new ResourceNotFoundException("Hotel not found."));
-        Hotel hotel = hotelRepository.save(objectMapper.convertValue(dto, Hotel.class));
+        Hotel hotel = hotelRepository.findById(dto.getHotelId()).orElseThrow(() -> new ResourceNotFoundException("Hotel not found."));
+        Date currentDate = new Date();
+        hotel.setHotelName(dto.getHotelName());
+        hotel.setStatus(dto.getStatus());
+        hotel.setHotelType(dto.getHotelType());
+        hotel.setAvailableFrom(dto.getAvailableFrom());
+        hotel.setAvailableTo(dto.getAvailableTo());
+        hotel.setDescription(dto.getDescription());
+        hotel.setUpdatedAt(currentDate);
 
-        return objectMapper.convertValue(hotel, HotelDTO.class);
+        Hotel savedHotel = hotelRepository.save(hotel);
+
+        return objectMapper.convertValue(savedHotel, HotelDTO.class);
     }
 
     /**

@@ -12,8 +12,11 @@ import com.example.hotelbooking.repository.ReservationRepository;
 import com.example.hotelbooking.repository.UserRepository;
 import com.example.hotelbooking.service.ReservationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,17 +29,28 @@ import java.util.Objects;
 @Slf4j
 @Service
 public class ReservationServiceImpl implements ReservationService {
-    @Autowired
+
     private ReservationRepository reservationRepository;
 
-    @Autowired
     private HotelRepository hotelRepository;
 
-    @Autowired
     private UserRepository userRepository;
 
-    @Autowired
     private ObjectMapper objectMapper;
+
+    private final MeterRegistry meterRegistry;
+
+    public ReservationServiceImpl(MeterRegistry meterRegistry, ObjectMapper objectMapper, UserRepository userRepository, HotelRepository hotelRepository, ReservationRepository reservationRepository) {
+        this.meterRegistry = meterRegistry;
+        this.objectMapper = objectMapper;
+        this.userRepository = userRepository;
+        this.hotelRepository = hotelRepository;
+        this.reservationRepository = reservationRepository;
+
+        Gauge.builder("reservations_count", reservationRepository::count)
+            .description("A current number of reservations in the system")
+            .register(meterRegistry);
+    }
 
     /**
      * Find reservation between 2 dates
@@ -46,7 +60,15 @@ public class ReservationServiceImpl implements ReservationService {
      */
     @Override
     public List<ReservationDTO> findReservationBetweenCheckInDate(SearchByDatesDTO dto) {
+        Tag userTag = Tag.of("userId", String.valueOf(dto.getUserId()));
+        Timer.Sample timer = Timer.start(meterRegistry);
+
         List<Reservation> reservations = reservationRepository.findReservationBetweenCheckInDate(dto.getDateFrom(), dto.getDateTo(), dto.getUserId());
+
+        timer.stop(Timer.builder("service_reservations_find")
+            .description("reservations searching timer")
+            .tags(List.of(userTag))
+            .register(meterRegistry));
 
         return reservations.stream()
             .map(reservation -> objectMapper.convertValue(reservation, ReservationDTO.class))
@@ -55,7 +77,15 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public List<ReservationDTO> findReservationByHotelId(SearchByHotelDTO dto) {
+        Tag userTag = Tag.of("userId", String.valueOf(dto.getUserId()));
+        Timer.Sample timer = Timer.start(meterRegistry);
+
         List<Reservation> reservations = reservationRepository.findReservationByHotel_HotelIdAndUser_UserId(dto.getHotelId(), dto.getUserId());
+
+        timer.stop(Timer.builder("service_reservations_find")
+            .description("reservations searching timer")
+            .tags(List.of(userTag))
+            .register(meterRegistry));
 
         return reservations.stream()
             .map(reservation -> objectMapper.convertValue(reservation, ReservationDTO.class))

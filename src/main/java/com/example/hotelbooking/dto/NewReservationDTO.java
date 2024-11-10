@@ -15,7 +15,7 @@ import lombok.Setter;
 @Getter @Setter
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
 public class NewReservationDTO {
-    private Integer reservationIdd;
+    private Integer reservationId;
 
     @Schema(
         description = "Check in date of reservation", example = "2024-11-01"

@@ -3,6 +3,8 @@ package com.example.hotelbooking.controller;
 import com.example.hotelbooking.dto.*;
 import com.example.hotelbooking.handler.model.Response;
 import com.example.hotelbooking.service.ReservationService;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +18,14 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/api/v1")
 public class ReservationController {
+    private ReservationService reservationService;
+    private MeterRegistry meterRegistry;
 
     @Autowired
-    private ReservationService reservationService;
+    public ReservationController(ReservationService reservationService, MeterRegistry meterRegistry) {
+        this.reservationService = reservationService;
+        this.meterRegistry = meterRegistry;
+    }
 
     /**
      * Endpoint to get all reservations.
@@ -75,7 +82,13 @@ public class ReservationController {
      */
     @PostMapping(value = "/reservation", produces = "application/json")
     public Response<ReservationDTO> createReservation(@Valid @RequestBody NewReservationDTO reservationDto){
+        Counter counter = Counter.builder("api_create_reservation")
+            .tag("reservations_counter", reservationDto.getHotel().getHotelId().toString())
+            .description("a number of requests to /api/reservation endpoint")
+            .register(meterRegistry);
+        counter.increment();
         log.info("Booking a new reservation...");
+
         ReservationDTO reservation = reservationService.createReservation(reservationDto);
 
         return new Response<>(HttpStatus.CREATED.value(), "success", reservation);
